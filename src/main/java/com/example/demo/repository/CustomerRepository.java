@@ -9,6 +9,11 @@ import org.springframework.stereotype.Repository;
 import com.example.demo.entity.Customer;
 import com.example.demo.entity.QCustomer;
 
+/**
+ * 联合使用jpa 与 dsl查询
+ * @author yzy
+ *
+ */
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long>, QuerydslPredicateExecutor<Customer>,
 		QuerydslBinderCustomizer<QCustomer> {

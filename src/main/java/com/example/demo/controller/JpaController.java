@@ -13,10 +13,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.demo.entity.Customer;
+import com.example.demo.entity.GoodInfoBean;
 import com.example.demo.entity.QCustomer;
+import com.example.demo.entity.QGoodInfoBean;
+import com.example.demo.entity.QGoodTypeBean;
 import com.example.demo.entity.QUser;
 import com.example.demo.entity.User;
 import com.example.demo.repository.CustomerRepository;
@@ -155,5 +159,41 @@ public class JpaController {
 		Query query = queryFactory.selectFrom(quser).where(quser.name.eq(userName)).createQuery();
 		return (User) query.getSingleResult();
 	}
-
+	
+	/**
+	 * 这种方式联repository
+	 * @param typeId
+	 * @return
+	 */
+	@RequestMapping(value = "/selectByType")
+	@ResponseBody
+    public List<GoodInfoBean> selectByType
+            (
+                    @RequestParam(value = "typeId") Long typeId //类型编号
+            )
+    {
+        //商品查询实体
+        QGoodInfoBean _Q_good = QGoodInfoBean.goodInfoBean;
+        //商品类型查询实体
+        QGoodTypeBean _Q_good_type = QGoodTypeBean.goodTypeBean;
+        return
+                queryFactory
+                .select(_Q_good)
+                .from(_Q_good,_Q_good_type)
+                .where(
+                        //为两个实体关联查询
+                        _Q_good.typeId.eq(_Q_good_type.id)
+                        .and(
+                                //查询指定typeid的商品
+                                _Q_good_type.id.eq(typeId)
+                        )
+                )
+                //根据排序字段倒序
+                .orderBy(_Q_good.order.desc())
+                //执行查询
+                .fetch();
+    }
 }
+
+
+
