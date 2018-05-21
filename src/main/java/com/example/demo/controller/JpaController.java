@@ -1,6 +1,9 @@
 package com.example.demo.controller;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
@@ -82,6 +85,30 @@ public class JpaController {
 	public List<String> getLastName() {
 		QCustomer customer = QCustomer.customer;
 		return queryFactory.select(customer.lastName).from(customer).groupBy(customer.lastName).fetch();
+	}
+	
+	@RequestMapping("/getGroupBy")
+	@ResponseBody
+	public Object getGroupBy() {
+		QCustomer customer = QCustomer.customer;
+		//return queryFactory.select(customer.id,customer.lastName,customer.count()).from(customer).groupBy(customer.lastName).fetch().toString();
+	
+		
+		return queryFactory.selectFrom(customer)
+				.select(customer.lastName,customer.count())
+				.groupBy(customer.lastName)
+				.fetch().stream().map(tuple->{
+					Map<String,Object> map = new LinkedHashMap<>();
+					map.put("lastName", tuple.get(customer.lastName));
+					map.put("count", tuple.get(customer.count()));
+					return map;
+					
+				})
+				.collect(Collectors.toList());
+				
+		//	return queryFactory.from(customer).groupBy(customer.lastName).select(customer.lastName,customer.lastName.count()).fetch();
+		//return queryFactory.from(customer).transform(GroupBy.groupBy(customer.lastName).as(expressions));
+		//	return null;
 	}
 
 	@RequestMapping("/findById")
