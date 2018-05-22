@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.example.demo.dto.GoodDto;
+import com.example.demo.dto.UserDto;
 import com.example.demo.entity.Customer;
 import com.example.demo.entity.GoodInfoBean;
 import com.example.demo.entity.QCustomer;
@@ -29,6 +31,7 @@ import com.example.demo.entity.User;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.UserRepository;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 @Controller
@@ -72,7 +75,25 @@ public class JpaController {
 	public List<Customer> getAll() {
 		return cr.findAll();
 	}
+	
+	@RequestMapping("/getUsersInfo")
+	@ResponseBody
+	public List<UserDto> getUserInfo(){
+		QUser user = QUser.user;
+		List<UserDto> dtos = queryFactory.select(Projections.bean(UserDto.class, user.id,user.name,user.address)).from(user).fetch();
+		return dtos;
+	}
 
+	@RequestMapping("/getUserById")
+	@ResponseBody
+	public UserDto getUserById(Integer id) {
+		QUser user = QUser.user;
+		UserDto dto = queryFactory.select(Projections.bean(UserDto.class, user.id,user.name,user.address)).from(user).where(user.id.eq(id)).fetchOne();
+		
+		return dto;
+	}
+	
+	
 	@RequestMapping("/getOrderAll")
 	@ResponseBody
 	public List<Customer> getOrderAll() {
@@ -220,6 +241,77 @@ public class JpaController {
                 //执行查询
                 .fetch();
     }
+	
+	@RequestMapping(value = "/selectWithQueryDSL")
+	@ResponseBody
+    public List<GoodDto> selectWithQueryDSL()
+    {
+        //商品基本信息
+        QGoodInfoBean _Q_good = QGoodInfoBean.goodInfoBean;
+        //商品类型
+        QGoodTypeBean _Q_good_type = QGoodTypeBean.goodTypeBean;
+
+        return queryFactory
+                .select(
+                        Projections.bean(
+                                GoodDto.class,//返回自定义实体的类型
+                                _Q_good.id,
+                                _Q_good.price,
+                                _Q_good.title,
+                                _Q_good.unit,
+                                _Q_good_type.name.as("typeName"),//使用别名对应dto内的typeName
+                                _Q_good_type.id.as("typeId")//使用别名对应dto内的typeId
+                         )
+                )
+                .from(_Q_good,_Q_good_type)//构建两表笛卡尔集
+                .where(_Q_good.typeId.eq(_Q_good_type.id))//关联两表
+                .orderBy(_Q_good.order.desc())//倒序
+                .fetch();
+    }
+	
+	
+	/**
+    * 使用java8新特性Collection内stream方法转换dto
+    * @return
+    */
+   @RequestMapping(value = "/selectWithStream")
+	@ResponseBody
+   public List<GoodDto> selectWithStream()
+	{
+		// 商品基本信息
+		QGoodInfoBean _Q_good = QGoodInfoBean.goodInfoBean;
+		// 商品类型
+		QGoodTypeBean _Q_good_type = QGoodTypeBean.goodTypeBean;
+		return queryFactory
+				.select(_Q_good.id, _Q_good.price, _Q_good.title, _Q_good.unit, _Q_good_type.name, _Q_good_type.id)
+				.from(_Q_good, _Q_good_type)// 构建两表笛卡尔集
+				.where(_Q_good.typeId.eq(_Q_good_type.id))// 关联两表
+				.orderBy(_Q_good.order.desc())// 倒序
+				.fetch().stream()
+				// 转换集合内的数据
+				.map(tuple -> {
+					// 创建商品dto
+					GoodDto dto = new GoodDto();
+					// 设置商品编号
+					dto.setId(tuple.get(_Q_good.id));
+					// 设置商品价格
+					dto.setPrice(tuple.get(_Q_good.price));
+					// 设置商品标题
+					dto.setTitle(tuple.get(_Q_good.title));
+					// 设置单位
+					dto.setUnit(tuple.get(_Q_good.unit));
+					// 设置类型编号
+					dto.setTypeId(tuple.get(_Q_good_type.id));
+					// 设置类型名称
+					dto.setTypeName(tuple.get(_Q_good_type.name));
+					// 返回本次构建的dto
+					return dto;
+				})
+				// 返回集合并且转换为List<GoodDTO>
+				.collect(Collectors.toList());
+	}
+
+
 }
 
 
