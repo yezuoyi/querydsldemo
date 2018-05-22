@@ -19,6 +19,8 @@ public class GoodDto implements Serializable {
 	private String typeName;
 	// 类型编号
 	private Long typeId;
+	
+	private Long extraId;
 
 	public Long getId() {
 		return id;
@@ -66,6 +68,14 @@ public class GoodDto implements Serializable {
 
 	public void setTypeId(Long typeId) {
 		this.typeId = typeId;
+	}
+
+	public Long getExtraId() {
+		return extraId;
+	}
+
+	public void setExtraId(Long extraId) {
+		this.extraId = extraId;
 	}
 
 }

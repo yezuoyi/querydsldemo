@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,17 +22,22 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.demo.dto.GoodDto;
 import com.example.demo.dto.UserDto;
+import com.example.demo.entity.BlogUser;
 import com.example.demo.entity.Customer;
 import com.example.demo.entity.GoodInfoBean;
+import com.example.demo.entity.QBlogPost;
+import com.example.demo.entity.QBlogUser;
 import com.example.demo.entity.QCustomer;
 import com.example.demo.entity.QGoodInfoBean;
 import com.example.demo.entity.QGoodTypeBean;
 import com.example.demo.entity.QUser;
+import com.example.demo.entity.QUserBean;
 import com.example.demo.entity.User;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.UserRepository;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 @Controller
@@ -75,12 +81,13 @@ public class JpaController {
 	public List<Customer> getAll() {
 		return cr.findAll();
 	}
-	
+
 	@RequestMapping("/getUsersInfo")
 	@ResponseBody
-	public List<UserDto> getUserInfo(){
+	public List<UserDto> getUserInfo() {
 		QUser user = QUser.user;
-		List<UserDto> dtos = queryFactory.select(Projections.bean(UserDto.class, user.id,user.name,user.address)).from(user).fetch();
+		List<UserDto> dtos = queryFactory.select(Projections.bean(UserDto.class, user.id, user.name, user.address))
+				.from(user).fetch();
 		return dtos;
 	}
 
@@ -88,12 +95,12 @@ public class JpaController {
 	@ResponseBody
 	public UserDto getUserById(Integer id) {
 		QUser user = QUser.user;
-		UserDto dto = queryFactory.select(Projections.bean(UserDto.class, user.id,user.name,user.address)).from(user).where(user.id.eq(id)).fetchOne();
-		
+		UserDto dto = queryFactory.select(Projections.bean(UserDto.class, user.id, user.name, user.address)).from(user)
+				.where(user.id.eq(id)).fetchOne();
+
 		return dto;
 	}
-	
-	
+
 	@RequestMapping("/getOrderAll")
 	@ResponseBody
 	public List<Customer> getOrderAll() {
@@ -107,29 +114,28 @@ public class JpaController {
 		QCustomer customer = QCustomer.customer;
 		return queryFactory.select(customer.lastName).from(customer).groupBy(customer.lastName).fetch();
 	}
-	
+
 	@RequestMapping("/getGroupBy")
 	@ResponseBody
 	public Object getGroupBy() {
 		QCustomer customer = QCustomer.customer;
-		//return queryFactory.select(customer.id,customer.lastName,customer.count()).from(customer).groupBy(customer.lastName).fetch().toString();
-	
-		
-		return queryFactory.selectFrom(customer)
-				.select(customer.lastName,customer.count())
-				.groupBy(customer.lastName)
-				.fetch().stream().map(tuple->{
-					Map<String,Object> map = new LinkedHashMap<>();
+		// return
+		// queryFactory.select(customer.id,customer.lastName,customer.count()).from(customer).groupBy(customer.lastName).fetch().toString();
+
+		return queryFactory.selectFrom(customer).select(customer.lastName, customer.count()).groupBy(customer.lastName)
+				.fetch().stream().map(tuple -> {
+					Map<String, Object> map = new LinkedHashMap<>();
 					map.put("lastName", tuple.get(customer.lastName));
 					map.put("count", tuple.get(customer.count()));
 					return map;
-					
-				})
-				.collect(Collectors.toList());
-				
-		//	return queryFactory.from(customer).groupBy(customer.lastName).select(customer.lastName,customer.lastName.count()).fetch();
-		//return queryFactory.from(customer).transform(GroupBy.groupBy(customer.lastName).as(expressions));
-		//	return null;
+
+				}).collect(Collectors.toList());
+
+		// return
+		// queryFactory.from(customer).groupBy(customer.lastName).select(customer.lastName,customer.lastName.count()).fetch();
+		// return
+		// queryFactory.from(customer).transform(GroupBy.groupBy(customer.lastName).as(expressions));
+		// return null;
 	}
 
 	@RequestMapping("/findById")
@@ -207,77 +213,57 @@ public class JpaController {
 		Query query = queryFactory.selectFrom(quser).where(quser.name.eq(userName)).createQuery();
 		return (User) query.getSingleResult();
 	}
-	
+
 	/**
 	 * 这种方式联repository
+	 * 
 	 * @param typeId
 	 * @return
 	 */
 	@RequestMapping(value = "/selectByType")
 	@ResponseBody
-    public List<GoodInfoBean> selectByType
-            (
-                    @RequestParam(value = "typeId") Long typeId //类型编号
-            )
-    {
-        //商品查询实体
-        QGoodInfoBean _Q_good = QGoodInfoBean.goodInfoBean;
-        //商品类型查询实体
-        QGoodTypeBean _Q_good_type = QGoodTypeBean.goodTypeBean;
-        return
-                queryFactory
-                .select(_Q_good)
-                .from(_Q_good,_Q_good_type)
-                .where(
-                        //为两个实体关联查询
-                        _Q_good.typeId.eq(_Q_good_type.id)
-                        .and(
-                                //查询指定typeid的商品
-                                _Q_good_type.id.eq(typeId)
-                        )
-                )
-                //根据排序字段倒序
-                .orderBy(_Q_good.order.desc())
-                //执行查询
-                .fetch();
-    }
-	
+	public List<GoodInfoBean> selectByType(@RequestParam(value = "typeId") Long typeId // 类型编号
+	) {
+		// 商品查询实体
+		QGoodInfoBean _Q_good = QGoodInfoBean.goodInfoBean;
+		// 商品类型查询实体
+		QGoodTypeBean _Q_good_type = QGoodTypeBean.goodTypeBean;
+		return queryFactory.select(_Q_good).from(_Q_good, _Q_good_type).where(
+				// 为两个实体关联查询
+				_Q_good.typeId.eq(_Q_good_type.id).and(
+						// 查询指定typeid的商品
+						_Q_good_type.id.eq(typeId)))
+				// 根据排序字段倒序
+				.orderBy(_Q_good.order.desc())
+				// 执行查询
+				.fetch();
+	}
+
 	@RequestMapping(value = "/selectWithQueryDSL")
 	@ResponseBody
-    public List<GoodDto> selectWithQueryDSL()
-    {
-        //商品基本信息
-        QGoodInfoBean _Q_good = QGoodInfoBean.goodInfoBean;
-        //商品类型
-        QGoodTypeBean _Q_good_type = QGoodTypeBean.goodTypeBean;
+	public List<GoodDto> selectWithQueryDSL() {
+		// 商品基本信息
+		QGoodInfoBean _Q_good = QGoodInfoBean.goodInfoBean;
+		// 商品类型
+		QGoodTypeBean _Q_good_type = QGoodTypeBean.goodTypeBean;
 
-        return queryFactory
-                .select(
-                        Projections.bean(
-                                GoodDto.class,//返回自定义实体的类型
-                                _Q_good.id,
-                                _Q_good.price,
-                                _Q_good.title,
-                                _Q_good.unit,
-                                _Q_good_type.name.as("typeName"),//使用别名对应dto内的typeName
-                                _Q_good_type.id.as("typeId")//使用别名对应dto内的typeId
-                         )
-                )
-                .from(_Q_good,_Q_good_type)//构建两表笛卡尔集
-                .where(_Q_good.typeId.eq(_Q_good_type.id))//关联两表
-                .orderBy(_Q_good.order.desc())//倒序
-                .fetch();
-    }
-	
-	
+		return queryFactory.select(Projections.bean(GoodDto.class, // 返回自定义实体的类型
+				_Q_good.id, _Q_good.price, _Q_good.title, _Q_good.unit, _Q_good_type.name.as("typeName"), // 使用别名对应dto内的typeName
+				_Q_good_type.id.as("typeId")// 使用别名对应dto内的typeId
+		)).from(_Q_good, _Q_good_type)// 构建两表笛卡尔集
+				.where(_Q_good.typeId.eq(_Q_good_type.id))// 关联两表
+				.orderBy(_Q_good.order.desc())// 倒序
+				.fetch();
+	}
+
 	/**
-    * 使用java8新特性Collection内stream方法转换dto
-    * @return
-    */
-   @RequestMapping(value = "/selectWithStream")
+	 * 使用java8新特性Collection内stream方法转换dto
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value = "/selectWithStream")
 	@ResponseBody
-   public List<GoodDto> selectWithStream()
-	{
+	public List<GoodDto> selectWithStream() {
 		// 商品基本信息
 		QGoodInfoBean _Q_good = QGoodInfoBean.goodInfoBean;
 		// 商品类型
@@ -311,8 +297,29 @@ public class JpaController {
 				.collect(Collectors.toList());
 	}
 
+	@RequestMapping(value = "/countExample")
+	@ResponseBody
+	public long countExample() {
+		// 用户查询实体
+		QUserBean _Q_user = QUserBean.userBean;
+		return queryFactory.select(_Q_user.id.count())// 根据主键查询总条数
+				.from(_Q_user).fetchOne();// 返回总条数
+	}
+	
+	/**
+	 * 子查询
+	 * @param title
+	 * @return
+	 */
+	@RequestMapping(value = "/getBlogUserByTitle")
+	@ResponseBody
+	public List<BlogUser> getBlogUserByTitle(String title) {
+		QBlogUser user = QBlogUser.blogUser;
+		QBlogPost blogPost = QBlogPost.blogPost;
+		List<BlogUser> users = queryFactory.selectFrom(user).where(user.id
+				.in(JPAExpressions.select(blogPost.user.id).from(blogPost).where(blogPost.title.eq("Hello World!"))))
+				.fetch();
+		return users;
+	}
 
 }
-
-
-
