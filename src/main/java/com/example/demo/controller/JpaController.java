@@ -321,5 +321,12 @@ public class JpaController {
 				.fetch();
 		return users;
 	}
+	
+	@RequestMapping(value = "/getBlogUserById")
+	@ResponseBody
+	public BlogUser getBlogUserById(Long id) {
+		QBlogUser user = QBlogUser.blogUser;
+		return queryFactory.select(user).from(user).where(user.id.eq(id)).fetchOne();
+	}
 
 }
