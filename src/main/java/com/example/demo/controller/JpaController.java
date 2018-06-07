@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,7 @@ import com.example.demo.dto.UserDto;
 import com.example.demo.entity.BlogUser;
 import com.example.demo.entity.Customer;
 import com.example.demo.entity.GoodInfoBean;
+import com.example.demo.entity.Husband;
 import com.example.demo.entity.QBlogPost;
 import com.example.demo.entity.QBlogUser;
 import com.example.demo.entity.QCustomer;
@@ -33,7 +33,9 @@ import com.example.demo.entity.QGoodTypeBean;
 import com.example.demo.entity.QUser;
 import com.example.demo.entity.QUserBean;
 import com.example.demo.entity.User;
+import com.example.demo.entity.Wife;
 import com.example.demo.repository.CustomerRepository;
+import com.example.demo.repository.HusbandRepository;
 import com.example.demo.repository.UserRepository;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
@@ -52,6 +54,9 @@ public class JpaController {
 
 	@Autowired
 	private UserRepository ur;
+	
+	@Autowired
+	private HusbandRepository hsRepo;
 
 	private JPAQueryFactory queryFactory;
 
@@ -329,4 +334,15 @@ public class JpaController {
 		return queryFactory.select(user).from(user).where(user.id.eq(id)).fetchOne();
 	}
 
+	@RequestMapping(value = "/addHus")
+	@ResponseBody
+	public Husband addHusband() {	
+		Husband hs = new Husband(null);
+		hs.setName("yezuoyi");
+		Wife wf = new Wife(null);
+		wf.setName("lili");
+		hs.setWife(wf);
+		wf.setHusband(hs);
+		return hsRepo.save(hs);
+	}
 }

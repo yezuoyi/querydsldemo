@@ -15,13 +15,19 @@ import javax.persistence.Table;
 
 import org.springframework.lang.NonNull;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import lombok.Data;
+
 
 @Entity
 @Table(name = "Wife")
+@Data
 public class Wife implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy =  GenerationType.AUTO)
     private Integer wid;
     
     @NonNull@Column(nullable = false)
@@ -30,6 +36,7 @@ public class Wife implements Serializable {
     
     @OneToOne
     @JoinColumn(name="hus_id")
+    @JsonBackReference
     private Husband husband;
     
     

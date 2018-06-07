@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import java.io.Serializable;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -12,22 +13,50 @@ import javax.persistence.Table;
 
 import org.springframework.lang.NonNull;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "Husband")
 public class Husband implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy =  GenerationType.AUTO)
     private Integer hid;
 
     @NonNull@Column(nullable = false)
     private String name;
 
 
-    @OneToOne(mappedBy="husband")
+    @OneToOne(cascade = CascadeType.PERSIST,mappedBy="husband")
+    @JsonManagedReference
     private Wife wife;
 
-    public Husband(){
+    
+    public Integer getHid() {
+		return hid;
+	}
+
+	public void setHid(Integer hid) {
+		this.hid = hid;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Wife getWife() {
+		return wife;
+	}
+
+	public void setWife(Wife wife) {
+		this.wife = wife;
+	}
+
+	public Husband(){
     }
 
     public Husband(String name){
