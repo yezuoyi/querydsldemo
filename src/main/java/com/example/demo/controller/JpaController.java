@@ -337,9 +337,9 @@ public class JpaController {
 	@RequestMapping(value = "/addHus")
 	@ResponseBody
 	public Husband addHusband() {	
-		Husband hs = new Husband(null);
+		Husband hs = new Husband();
 		hs.setName("yezuoyi");
-		Wife wf = new Wife(null);
+		Wife wf = new Wife();
 		wf.setName("lili");
 		hs.setWife(wf);
 		wf.setHusband(hs);
